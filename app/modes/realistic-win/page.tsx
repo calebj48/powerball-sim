@@ -8,7 +8,7 @@ import Link from 'next/link';
 import TicketDisplay from '@/components/TicketDisplay';
 import MessageFeed from '@/components/MessageFeed';
 import StatsDisplay from '@/components/StatsDisplay';
-import { generateRandomTicket } from '@/lib/powerball';
+import { generateRandomTicket, validateCustomTicket } from '@/lib/powerball';
 import { Ticket } from '@/lib/types';
 
 interface Message {
@@ -21,6 +21,10 @@ export default function RealisticWinPage() {
   const [started, setStarted] = useState(false);
   const [running, setRunning] = useState(false);
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [ticketMode, setTicketMode] = useState<'random' | 'custom'>('random');
+  const [whites, setWhites] = useState<string[]>(['', '', '', '', '']);
+  const [powerball, setPowerball] = useState('');
+  const [error, setError] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [stats, setStats] = useState({
     ticketsGenerated: 0,
@@ -99,15 +103,43 @@ export default function RealisticWinPage() {
     setMessages(prev => [...prev, msg]);
   };
 
+  const handleWhiteChange = (index: number, value: string) => {
+    const newWhites = [...whites];
+    newWhites[index] = value;
+    setWhites(newWhites);
+    setError('');
+  };
+
   const handleStart = () => {
-    // Generate one ticket
-    const newTicket = generateRandomTicket();
+    let newTicket: Ticket;
+
+    if (ticketMode === 'custom') {
+      // Parse and validate custom numbers
+      const whiteNumbers = whites.map(w => parseInt(w, 10)).filter(n => !isNaN(n));
+      const powerballNumber = parseInt(powerball, 10);
+
+      const validation = validateCustomTicket(whiteNumbers, powerballNumber);
+
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid ticket');
+        return;
+      }
+
+      // Create ticket with sorted whites
+      const sortedWhites = [...whiteNumbers].sort((a, b) => a - b);
+      newTicket = { whites: sortedWhites, powerball: powerballNumber };
+    } else {
+      // Generate random ticket
+      newTicket = generateRandomTicket();
+    }
+
     setTicket(newTicket);
     setStarted(true);
     setRunning(true);
     setMessages([]);
     setStats({ ticketsGenerated: 0, moneySpent: 0, yearsWaited: 0 });
     setResult(null);
+    setError('');
 
     // Start worker
     workerRef.current?.postMessage({ action: 'start', ticket: newTicket });
@@ -122,6 +154,10 @@ export default function RealisticWinPage() {
     setStarted(false);
     setRunning(false);
     setTicket(null);
+    setTicketMode('random');
+    setWhites(['', '', '', '', '']);
+    setPowerball('');
+    setError('');
     setMessages([]);
     setStats({ ticketsGenerated: 0, moneySpent: 0, yearsWaited: 0 });
     setResult(null);
@@ -154,6 +190,85 @@ export default function RealisticWinPage() {
                 <strong>VERY long time</strong>.
               </p>
               <p>You'll see humorous milestone messages along the way that put the odds into perspective.</p>
+            </div>
+
+            {/* Ticket Mode Selection */}
+            <div className="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6">
+              <label className="block text-lg font-semibold mb-4 text-gray-900">
+                Choose Your Ticket:
+              </label>
+
+              <div className="space-y-4 mb-6">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ticketMode"
+                    value="random"
+                    checked={ticketMode === 'random'}
+                    onChange={() => setTicketMode('random')}
+                    className="w-5 h-5 mr-3"
+                  />
+                  <span className="text-gray-700 font-medium">Random Ticket (generated automatically)</span>
+                </label>
+
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ticketMode"
+                    value="custom"
+                    checked={ticketMode === 'custom'}
+                    onChange={() => setTicketMode('custom')}
+                    className="w-5 h-5 mr-3"
+                  />
+                  <span className="text-gray-700 font-medium">Custom Ticket (choose your own numbers)</span>
+                </label>
+              </div>
+
+              {/* Custom Number Inputs */}
+              {ticketMode === 'custom' && (
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
+                  <div className="mb-4">
+                    <label className="block text-md font-semibold mb-3 text-gray-900">
+                      White Balls (1-69):
+                    </label>
+                    <div className="grid grid-cols-5 gap-3">
+                      {whites.map((value, idx) => (
+                        <input
+                          key={idx}
+                          type="number"
+                          min="1"
+                          max="69"
+                          value={value}
+                          onChange={(e) => handleWhiteChange(idx, e.target.value)}
+                          placeholder={`${idx + 1}`}
+                          className="w-full px-3 py-2 text-center text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-black bg-white"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-md font-semibold mb-3 text-gray-900">
+                      Powerball (1-26):
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="26"
+                      value={powerball}
+                      onChange={(e) => setPowerball(e.target.value)}
+                      placeholder="PB"
+                      className="w-24 px-3 py-2 text-center text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-black bg-white"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-4">
+                      <div className="text-red-700 font-semibold">{error}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <button
