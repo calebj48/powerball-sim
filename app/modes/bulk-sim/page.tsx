@@ -86,7 +86,7 @@ export default function BulkSimPage() {
         value={quantity}
         onChange={(e) => setQuantity(e.target.value)}
         placeholder="1000"
-        className="w-48 px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-black"
+        className="w-48 px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-black bg-white"
       />
     </div>
 

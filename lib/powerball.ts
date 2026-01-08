@@ -137,10 +137,11 @@ export async function generateAndTestNTickets(
       losses++;
     }
 
+    // Update progress on every ticket for smoother UI feedback
     onProgress?.(i + 1);
 
-    // Yield to event loop periodically
-    if (i % 100 === 0) {
+    // Yield to event loop less frequently for better performance
+    if (i % 1000 === 0) {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
   }
