@@ -74,21 +74,21 @@ export default function BulkSimPage() {
         </div>
 
         {/* Input Form */}
-        {tickets.length === 0 && (
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-8 mb-8">
-            <div className="mb-6">
-              <label className="block text-lg font-semibold text-gray-700 mb-3">
-                How many tickets to generate?
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="1000"
-                className="w-48 px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-              />
-            </div>
+{tickets.length === 0 && (
+  <div className="bg-white border-2 border-gray-300 rounded-lg p-8 mb-8 text-black">
+    <div className="mb-6">
+      <label className="block text-lg font-semibold mb-3 text-black">
+        How many tickets to generate?
+      </label>
+      <input
+        type="number"
+        min="1"
+        value={quantity}
+        onChange={(e) => setQuantity(e.target.value)}
+        placeholder="1000"
+        className="w-48 px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-black"
+      />
+    </div>
 
             <div className="mb-6">
               <label className="flex items-center">
